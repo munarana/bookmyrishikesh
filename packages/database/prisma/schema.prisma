@@ -47,6 +47,13 @@ model User {
   schools       School[]  @relation("SchoolOwner")
 }
 
+enum SchoolStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  INACTIVE
+}
+
 model School {
   id             String   @id @default(cuid())
   slug           String   @unique
@@ -58,11 +65,18 @@ model School {
   longitude      Float?
   phone          String?
   whatsapp       String?
-  verified       Boolean  @default(false)
+  status         SchoolStatus @default(PENDING)
   commissionRate Float    @default(10.0)
   coverPhoto     String?
   gallery        String[]
   virtualTourUrl String?
+  
+  // Verification Fields
+  yogaCertificateUrl  String?
+  personalIdUrl       String?
+  businessRegistrationNo String?
+  applicationNotes    String?
+  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

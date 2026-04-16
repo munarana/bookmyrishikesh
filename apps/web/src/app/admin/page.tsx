@@ -3,8 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, FileText, CheckCircle, Search, Shield, Globe, Tag, Activity, Settings, TrendingUp, Calendar, DollarSign } from "lucide-react";
 import Image from "next/image";
+import { getAdminStats, getPendingSchools } from "@/lib/actions/school-actions";
 
-export default function SuperAdminDashboard() {
+export default async function SuperAdminDashboard() {
+  const statsResult = await getAdminStats();
+  const schoolsResult = await getPendingSchools();
+  
+  const stats = (statsResult.success && statsResult.data) ? statsResult.data : {
+    totalRevenue: 0,
+    commission: 0,
+    totalBookings: 0,
+    activeSchools: 0,
+    pendingApprovals: 0
+  };
+
+  const pendingSchools = (schoolsResult.success && schoolsResult.data) ? schoolsResult.data.slice(0, 3) : [];
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row mt-16 font-sans">
       {/* Super Admin Sidebar */}
@@ -20,7 +34,12 @@ export default function SuperAdminDashboard() {
             <Activity className="w-4 h-4" /> Platform Analytics
           </Link>
           <Link href="/admin/approvals" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-slate-800 hover:text-white">
-            <CheckCircle className="w-4 h-4" /> School Approvals <span className="ml-auto bg-accent text-slate-900 text-[10px] px-1.5 rounded-full font-bold">2</span>
+            <CheckCircle className="w-4 h-4" /> School Approvals 
+            {stats.pendingApprovals > 0 && (
+              <span className="ml-auto bg-accent text-slate-900 text-[10px] px-1.5 rounded-full font-bold">
+                {stats.pendingApprovals}
+              </span>
+            )}
           </Link>
           <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-slate-800 hover:text-white">
             <Users className="w-4 h-4" /> User Management
@@ -59,7 +78,7 @@ export default function SuperAdminDashboard() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Total Revenue</p>
-                  <h3 className="text-3xl font-bold text-slate-900">$245,600</h3>
+                  <h3 className="text-3xl font-bold text-slate-900">${stats.totalRevenue.toLocaleString()}</h3>
                 </div>
                 <div className="p-3 bg-emerald-50 rounded-lg"><DollarSign className="w-5 h-5 text-emerald-600" /></div>
               </div>
@@ -71,7 +90,7 @@ export default function SuperAdminDashboard() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Platform Commission</p>
-                  <h3 className="text-3xl font-bold text-slate-900">$24,560</h3>
+                  <h3 className="text-3xl font-bold text-slate-900">${stats.commission.toLocaleString()}</h3>
                 </div>
                 <div className="p-3 bg-amber-50 rounded-lg"><TrendingUp className="w-5 h-5 text-amber-600" /></div>
               </div>
@@ -95,11 +114,13 @@ export default function SuperAdminDashboard() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Active Schools</p>
-                  <h3 className="text-3xl font-bold text-slate-900">54</h3>
+                  <h3 className="text-3xl font-bold text-slate-900">{stats.activeSchools}</h3>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg"><Users className="w-5 h-5 text-purple-600" /></div>
               </div>
-              <p className="text-xs text-slate-500 font-medium mt-4 flex items-center gap-1">2 Pending Approvals</p>
+              <p className="text-xs text-slate-500 font-medium mt-4 flex items-center gap-1">
+                {stats.pendingApprovals} Pending Approvals
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -107,30 +128,39 @@ export default function SuperAdminDashboard() {
         {/* Action Required & Top Schools */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card className="border-none shadow-sm bg-white rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-lg">Pending School Applications</CardTitle>
-              <CardDescription>Review and approve new partners to join the platform.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Pending School Applications</CardTitle>
+                <CardDescription>Review and approve new partners to join the platform.</CardDescription>
+              </div>
+              <Link href="/admin/approvals">
+                <Button variant="ghost" size="sm" className="text-xs">View All</Button>
+              </Link>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { name: "Sushumna Yoga", owner: "Ravi Shankar", location: "Laxman Jhula" },
-                  { name: "Prana Retreats", owner: "Amanda Lin", location: "Tapovan" }
-                ].map((school, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-4 border border-slate-100 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-sm text-slate-600">{school.name.charAt(0)}</div>
-                      <div>
-                        <div className="font-bold text-sm text-slate-900">{school.name}</div>
-                        <div className="text-xs text-slate-500">{school.owner} • {school.location}</div>
+                {pendingSchools.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-8">No pending applications.</p>
+                ) : (
+                  pendingSchools.map((school) => (
+                    <div key={school.id} className="flex justify-between items-center p-4 border border-slate-100 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-sm text-slate-600">
+                          {school.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm text-slate-900">{school.name}</div>
+                          <div className="text-xs text-slate-500">{school.owner?.name || 'New User'} • {school.address || 'Rishikesh'}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link href={`/admin/approvals`}>
+                          <Button variant="outline" size="sm" className="text-xs h-8">Review</Button>
+                        </Link>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="text-xs h-8">Review</Button>
-                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8">Approve</Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
