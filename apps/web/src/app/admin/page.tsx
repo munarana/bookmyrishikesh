@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, CheckCircle, Search, Shield, Globe, Tag, Activity, Settings, TrendingUp } from "lucide-react";
+import { Users, FileText, CheckCircle, Search, Shield, Globe, Tag, Activity, Settings, TrendingUp, Calendar, DollarSign } from "lucide-react";
 import Image from "next/image";
 
 export default function SuperAdminDashboard() {
@@ -168,7 +168,3 @@ export default function SuperAdminDashboard() {
   );
 }
 
-// Dummy DollarSign icon since I used it but forgot to import it if it wasn't there
-function DollarSign(props: any) {
-  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-}
