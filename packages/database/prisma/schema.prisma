@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  SCHOOL_ADMIN
+  SUPER_ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  DEPOSIT_PAID
+  FULL_PAID
+  REFUNDED
+  DISPUTED
+  CANCELLED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ALL_LEVELS
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  image         String?
+  phone         String?
+  nationality   String?
+  passportNo    String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  bookings      Booking[]
+  reviews       Review[]
+  schools       School[]  @relation("SchoolOwner")
+}
+
+model School {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  description    String
+  establishedYear Int?
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  phone          String?
+  whatsapp       String?
+  verified       Boolean  @default(false)
+  commissionRate Float    @default(10.0)
+  coverPhoto     String?
+  gallery        String[]
+  virtualTourUrl String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  ownerId        String
+  owner          User     @relation("SchoolOwner", fields: [ownerId], references: [id])
+  courses        Course[]
+}
+
+model Teacher {
+  id             String    @id @default(cuid())
+  courseId       String
+  name           String
+  bio            String?
+  photoUrl       String?
+  certifications String[]
+  yearsTeaching  Int?
+  
+  course         Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id              String      @id @default(cuid())
+  schoolId        String
+  name            String
+  slug            String      @unique
+  description     String
+  category        String      // e.g. TTC, Retreat, Drop-in
+  style           String      // e.g. Hatha, Ashtanga
+  level           CourseLevel @default(ALL_LEVELS)
+  durationDays    Int
+  priceINR        Float
+  priceUSD        Float
+  depositPercent  Float       @default(20)
+  includedItems   String[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  school          School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  courseDates     CourseDate[]
+  teachers        Teacher[]
+}
+
+model CourseDate {
+  id           String    @id @default(cuid())
+  courseId     String
+  startDate    DateTime
+  endDate      DateTime
+  capacity     Int
+  priceModifier Float    @default(1.0) // 1.0 is standard, >1 is high season
+
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  userId        String
+  courseDateId  String
+  guests        Int           @default(1)
+  roomType      String        // shared/private/dormitory
+  totalPrice    Float
+  depositAmount Float
+  status        BookingStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id])
+  courseDate    CourseDate    @relation(fields: [courseDateId], references: [id])
+  payments      Payment[]
+  review        Review?
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  bookingId        String
+  amount           Float
+  currency         String   @default("USD")
+  provider         String   // STRIPE, RAZORPAY
+  transactionId    String?  @unique
+  status           String   // SUCCESS, PENDING, FAILED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  userId      String
+  rating      Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+  
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
+}
