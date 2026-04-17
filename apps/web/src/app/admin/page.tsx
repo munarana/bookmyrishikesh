@@ -5,6 +5,8 @@ import { Users, FileText, CheckCircle, Search, Shield, Globe, Tag, Activity, Set
 import Image from "next/image";
 import { getAdminStats, getPendingSchools } from "@/lib/actions/school-actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function SuperAdminDashboard() {
   const statsResult = await getAdminStats();
   const schoolsResult = await getPendingSchools();

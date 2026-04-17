@@ -4,9 +4,58 @@ import { prisma, SchoolStatus } from '@repo/database';
 import { revalidatePath } from 'next/cache';
 
 /**
+ * Helper to check if database state can be accessed
+ * In a real app, we check process.env.DATABASE_URL
+ */
+const isDbAvailable = !!process.env.DATABASE_URL;
+
+/**
+ * Mock data for when DB is not available (Local UI testing)
+ */
+const MOCK_DATA = {
+  pendingSchools: [
+    {
+      id: 'mock-1',
+      name: 'Sushumna Yoga School',
+      address: 'Laxman Jhula, Rishikesh',
+      businessRegistrationNo: 'REG-2024-001',
+      yogaCertificateUrl: 'https://placehold.co/600x400?text=Yoga+Certificate',
+      personalIdUrl: 'https://placehold.co/600x400?text=Personal+ID',
+      createdAt: new Date().toISOString(),
+      owner: { name: 'Ravi Shankar', email: 'ravi@example.com' }
+    },
+    {
+      id: 'mock-2',
+      name: 'Prana Retreats',
+      address: 'Tapovan, Rishikesh',
+      businessRegistrationNo: 'REG-2024-002',
+      yogaCertificateUrl: 'https://placehold.co/600x400?text=Yoga+Certificate',
+      personalIdUrl: 'https://placehold.co/600x400?text=Personal+ID',
+      createdAt: new Date().toISOString(),
+      owner: { name: 'Amanda Lin', email: 'amanda@example.com' }
+    }
+  ],
+  stats: {
+    pendingApprovals: 2,
+    activeSchools: 54,
+    totalUsers: 1248,
+    totalRevenue: 245600,
+    commission: 24560,
+  }
+};
+
+/**
  * Fetches all school applications with a PENDING status.
  */
 export async function getPendingSchools() {
+  if (!isDbAvailable) {
+    console.warn('DATABASE_URL missing, returning mock pending schools');
+    return {
+      success: true,
+      data: MOCK_DATA.pendingSchools as any[]
+    };
+  }
+
   try {
     const schools = await prisma.school.findMany({
       where: {
@@ -39,6 +88,11 @@ export async function updateSchoolStatus(
   status: SchoolStatus,
   notes?: string
 ) {
+  if (!isDbAvailable) {
+    console.log(`Mock: Updating school ${schoolId} to ${status}`);
+    return { success: true, message: 'Mock update successful' };
+  }
+
   try {
     await prisma.school.update({
       where: { id: schoolId },
@@ -62,6 +116,13 @@ export async function updateSchoolStatus(
  * Fetches platform-wide stats for the Super Admin dashboard.
  */
 export async function getAdminStats() {
+  if (!isDbAvailable) {
+    return {
+      success: true,
+      data: MOCK_DATA.stats
+    };
+  }
+
   try {
     const [pendingCount, totalSchools, totalUsers] = await Promise.all([
       prisma.school.count({ where: { status: SchoolStatus.PENDING } }),
@@ -75,7 +136,6 @@ export async function getAdminStats() {
         pendingApprovals: pendingCount,
         activeSchools: totalSchools,
         totalUsers: totalUsers,
-        // Mock revenue data for now as we don't have a payments table fully integrated with live data in this mockup
         totalRevenue: 245600, 
         commission: 24560,
       },

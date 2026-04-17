@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { getPendingSchools } from "@/lib/actions/school-actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function SchoolApprovalsPage() {
   const result = await getPendingSchools();
   const schools = (result.success && result.data) ? result.data : [];
