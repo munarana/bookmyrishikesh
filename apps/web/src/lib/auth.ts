@@ -27,11 +27,14 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
+        console.log("Authorize check for:", credentials.email, "User found:", !!user);
+
         if (!user || !user.password) {
           throw new Error("User not found or password not set");
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        console.log("Password valid for", credentials.email, ":", isPasswordValid);
 
         if (!isPasswordValid) {
           throw new Error("Invalid password");

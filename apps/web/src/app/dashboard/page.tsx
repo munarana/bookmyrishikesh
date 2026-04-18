@@ -1,22 +1,53 @@
+"use client";
+
 import Link from "next/link";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Calendar, Heart, Award, User, Clock, MapPin, Download } from "lucide-react";
+import { LayoutDashboard, Calendar, Heart, Award, User, Clock, MapPin, Download, Loader2 } from "lucide-react";
 import Image from "next/image";
 
-export default async function StudentDashboard() {
-  const session = await getServerSession(authOptions);
+export default function StudentDashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("past");
 
-  if (!session) {
-    redirect("/login");
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+    
+    // Check hash on mount to set initial tab
+    const hash = window.location.hash.replace("#", "");
+    if (["past", "saved", "certificates"].includes(hash)) {
+      setActiveTab(hash);
+    } else if (hash === "bookings") {
+      setActiveTab("past");
+    } else if (hash === "wishlist") {
+      setActiveTab("saved");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (!session) return null;
 
   const user = session.user as any;
   const userInitials = user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "U";
+
+  const handleSidebarClick = (tab: string) => {
+    setActiveTab(tab);
+    window.location.hash = tab;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20 pb-24">
@@ -41,26 +72,44 @@ export default async function StudentDashboard() {
                 </div>
               </div>
 
-              <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md bg-secondary text-primary font-medium">
+              <button 
+                onClick={() => handleSidebarClick("past")}
+                className={`flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${activeTab === "past" ? "bg-secondary text-primary font-medium" : "text-muted-foreground hover:bg-slate-100"}`}
+              >
                 <LayoutDashboard className="w-4 h-4" /> Overview
-              </Link>
-              <Link href="#bookings" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100">
+              </button>
+              <button 
+                onClick={() => handleSidebarClick("past")}
+                className={`flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${activeTab === "past" ? "bg-secondary text-primary font-medium" : "text-muted-foreground hover:bg-slate-100"}`}
+              >
                 <Calendar className="w-4 h-4" /> My Bookings
-              </Link>
-              <Link href="#wishlist" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100">
+              </button>
+              <button 
+                onClick={() => handleSidebarClick("saved")}
+                className={`flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${activeTab === "saved" ? "bg-secondary text-primary font-medium" : "text-muted-foreground hover:bg-slate-100"}`}
+              >
                 <Heart className="w-4 h-4" /> Saved Schools
-              </Link>
-              <Link href="#certificates" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100">
+              </button>
+              <button 
+                onClick={() => handleSidebarClick("certificates")}
+                className={`flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${activeTab === "certificates" ? "bg-secondary text-primary font-medium" : "text-muted-foreground hover:bg-slate-100"}`}
+              >
                 <Award className="w-4 h-4" /> Certificates
-              </Link>
-              <Link href="#profile" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100">
+              </button>
+              <button 
+                onClick={() => handleSidebarClick("profile")}
+                className="flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100"
+              >
                 <User className="w-4 h-4" /> Profile Settings
-              </Link>
+              </button>
               
               <div className="pt-4 mt-4 border-t border-slate-100">
-                 <Link href="/api/auth/signout" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-red-500 hover:bg-red-50">
+                 <button 
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md text-red-500 hover:bg-red-50"
+                 >
                     <Clock className="w-4 h-4" /> Sign Out
-                 </Link>
+                 </button>
               </div>
             </CardContent>
           </Card>
@@ -107,7 +156,7 @@ export default async function StudentDashboard() {
               </CardContent>
             </Card>
 
-            <Tabs defaultValue="past">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start h-auto p-0 mb-6 space-x-6">
                 <TabsTrigger value="past" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none px-0 py-2 text-base font-medium text-muted-foreground">Past Bookings</TabsTrigger>
                 <TabsTrigger value="saved" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none px-0 py-2 text-base font-medium text-muted-foreground">Saved Schools</TabsTrigger>
