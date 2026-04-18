@@ -1,7 +1,16 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { LayoutDashboard, Users, BookOpen, Calendar as CalendarIcon, MessageSquare, Image as ImageIcon, DollarSign, Settings, LogOut } from "lucide-react";
 
-export default function SchoolAdminLayout({ children }: { children: React.ReactNode }) {
+export default async function SchoolAdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || (session.user as any).role !== "SCHOOL_ADMIN") {
+    redirect("/login");
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row mt-16">
       {/* Sidebar sidebar */}
@@ -37,9 +46,9 @@ export default function SchoolAdminLayout({ children }: { children: React.ReactN
           <Link href="/school-admin/settings" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100 hover:text-foreground">
             <Settings className="w-4 h-4" /> Settings
           </Link>
-          <button className="flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md text-destructive hover:bg-destructive/10">
+          <Link href="/api/auth/signout" className="flex w-full items-center gap-3 px-3 py-2 text-sm rounded-md text-destructive hover:bg-destructive/10">
             <LogOut className="w-4 h-4" /> Logout
-          </button>
+          </Link>
         </div>
       </aside>
 

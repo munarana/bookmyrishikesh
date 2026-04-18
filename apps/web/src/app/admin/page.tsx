@@ -1,13 +1,22 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, CheckCircle, Search, Shield, Globe, Tag, Activity, Settings, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Users, FileText, CheckCircle, Search, Shield, Globe, Tag, Activity, Settings, TrendingUp, Calendar, DollarSign, LogOut } from "lucide-react";
 import Image from "next/image";
 import { getAdminStats, getPendingSchools } from "@/lib/actions/school-actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuperAdminDashboard() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || (session.user as any).role !== "SUPER_ADMIN") {
+    redirect("/login");
+  }
+
   const statsResult = await getAdminStats();
   const schoolsResult = await getPendingSchools();
   
@@ -59,9 +68,12 @@ export default async function SuperAdminDashboard() {
             <Globe className="w-4 h-4" /> Homepage Content
           </Link>
         </nav>
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 space-y-1">
           <Link href="/admin/settings" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-slate-800 hover:text-white">
             <Settings className="w-4 h-4" /> SEO & Config
+          </Link>
+          <Link href="/api/auth/signout" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-red-400 hover:bg-red-900/20 hover:text-red-300">
+            <LogOut className="w-4 h-4" /> Sign Out
           </Link>
         </div>
       </aside>

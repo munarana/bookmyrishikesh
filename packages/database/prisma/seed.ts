@@ -1,28 +1,53 @@
 import { PrismaClient, Role, CourseLevel } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding database...');
 
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const ownerPassword = await bcrypt.hash('owner123', 10);
+
+  const studentPassword = await bcrypt.hash('student123', 10);
+
   // Create an owner
   const admin = await prisma.user.upsert({
     where: { email: 'admin@rishikeshyoga.com' },
-    update: {},
+    update: {
+      password: hashedPassword,
+    },
     create: {
       email: 'admin@rishikeshyoga.com',
       name: 'Rishikesh Admin',
+      password: hashedPassword,
       role: Role.SUPER_ADMIN,
     },
   });
 
   const schoolOwner = await prisma.user.upsert({
     where: { email: 'owner@satvicyoga.com' },
-    update: {},
+    update: {
+      password: ownerPassword,
+    },
     create: {
       email: 'owner@satvicyoga.com',
       name: 'Satvic Owner',
+      password: ownerPassword,
       role: Role.SCHOOL_ADMIN,
+    },
+  });
+
+  const student = await prisma.user.upsert({
+    where: { email: 'student@example.com' },
+    update: {
+      password: studentPassword,
+    },
+    create: {
+      email: 'student@example.com',
+      name: 'John Student',
+      password: studentPassword,
+      role: Role.STUDENT,
     },
   });
 
@@ -36,7 +61,7 @@ async function main() {
       description: 'A traditional yoga school in the heart of Rishikesh focusing on authentic Hatha and Ashtanga lineage.',
       establishedYear: 2010,
       address: 'Tapovan, Rishikesh, Uttarakhand 249192',
-      verified: true,
+      status: 'APPROVED',
       ownerId: schoolOwner.id,
       coverPhoto: 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
       courses: {
@@ -94,6 +119,7 @@ async function main() {
   });
 
   console.log(`Created school: ${school.name}`);
+  console.log('Seeding completed.');
 }
 
 main()

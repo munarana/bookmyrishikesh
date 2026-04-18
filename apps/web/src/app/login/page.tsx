@@ -1,13 +1,65 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, User, GraduationCap } from "lucide-react";
+import { ShieldAlert, User, GraduationCap, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e: React.FormEvent, type: "student" | "school") => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        // Fetch session to get the role
+        const response = await fetch("/api/auth/session");
+        const session = await response.json();
+        const role = session?.user?.role;
+
+        if (role === "SCHOOL_ADMIN") {
+          router.push("/school-admin");
+        } else if (role === "SUPER_ADMIN") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
+        router.refresh();
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 z-0 overflow-hidden opacity-20">
@@ -27,6 +79,12 @@ export default function LoginPage() {
           <p className="text-slate-600 mt-2">Welcome back to your spiritual journey.</p>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm text-center font-medium animate-in fade-in slide-in-from-top-1">
+            {error}
+          </div>
+        )}
+
         <Tabs defaultValue="student" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 h-12 bg-white/50 backdrop-blur border border-slate-200">
             <TabsTrigger value="student" className="data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md"><User className="w-4 h-4 mr-2"/> Student</TabsTrigger>
@@ -39,30 +97,56 @@ export default function LoginPage() {
                 <CardTitle className="text-2xl font-bold font-heading">Student Login</CardTitle>
                 <CardDescription>Log in to view your bookings and certificates.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="s-email">Email</Label>
-                  <Input id="s-email" type="email" placeholder="yogi@example.com" required />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="s-password">Password</Label>
-                    <Link href="#" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+              <form onSubmit={(e) => handleLogin(e, "student")}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="s-email">Email</Label>
+                    <Input 
+                      id="s-email" 
+                      type="email" 
+                      placeholder="yogi@example.com" 
+                      required 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
                   </div>
-                  <Input id="s-password" type="password" required />
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg">Sign In</Button>
-                
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
-                  <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-500">Or continue with</span></div>
-                </div>
-                
-                <Button variant="outline" className="w-full h-12 text-slate-700 bg-white border-slate-300 hover:bg-slate-50">
-                  <img src="https://cdn.iconscout.com/icon/free/png-256/free-google-1772223-1507807.png" alt="Google" className="w-5 h-5 mr-2" />
-                  Sign in with Google
-                </Button>
-              </CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="s-password">Password</Label>
+                      <Link href="#" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+                    </div>
+                    <Input 
+                      id="s-password" 
+                      type="password" 
+                      required 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 text-lg"
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Sign In"}
+                  </Button>
+                  
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-500">Or continue with</span></div>
+                  </div>
+                  
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full h-12 text-slate-700 bg-white border-slate-300 hover:bg-slate-50"
+                    onClick={handleGoogleLogin}
+                  >
+                    <img src="https://cdn.iconscout.com/icon/free/png-256/free-google-1772223-1507807.png" alt="Google" className="w-5 h-5 mr-2" />
+                    Sign in with Google
+                  </Button>
+                </CardContent>
+              </form>
               <CardFooter className="flex justify-center border-t border-slate-100 mt-4 pt-6">
                 <p className="text-sm text-slate-600">Don&apos;t have an account? <Link href="/register" className="text-primary font-bold hover:underline">Sign up</Link></p>
               </CardFooter>
@@ -75,24 +159,45 @@ export default function LoginPage() {
                 <CardTitle className="text-2xl font-bold font-heading">School Admin Portal</CardTitle>
                 <CardDescription>Manage your yoga school, courses, and incoming bookings.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-amber-50 border border-amber-200 p-3 rounded-md flex items-start gap-3 mb-4">
-                  <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800">For security reasons, schools cannot log in using Google OAuth. Please use your registered partner email.</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="a-email">Partner Email</Label>
-                  <Input id="a-email" type="email" placeholder="admin@ashram.com" required />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="a-password">Password</Label>
-                    <Link href="#" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+              <form onSubmit={(e) => handleLogin(e, "school")}>
+                <CardContent className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-md flex items-start gap-3 mb-4">
+                    <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">For security reasons, schools cannot log in using Google OAuth. Please use your registered partner email.</p>
                   </div>
-                  <Input id="a-password" type="password" required />
-                </div>
-                <Button className="w-full bg-accent hover:bg-accent/90 text-primary font-bold h-12 text-lg">Access Portal</Button>
-              </CardContent>
+                  <div className="space-y-2">
+                    <Label htmlFor="a-email">Partner Email</Label>
+                    <Input 
+                      id="a-email" 
+                      type="email" 
+                      placeholder="admin@ashram.com" 
+                      required 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="a-password">Password</Label>
+                      <Link href="#" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+                    </div>
+                    <Input 
+                      id="a-password" 
+                      type="password" 
+                      required 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-accent hover:bg-accent/90 text-primary font-bold h-12 text-lg"
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Access Portal"}
+                  </Button>
+                </CardContent>
+              </form>
               <CardFooter className="flex justify-center border-t border-slate-100 mt-4 pt-6">
                 <p className="text-sm text-slate-600 flex flex-col items-center">
                   Want to list your school? 
