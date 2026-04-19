@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, LayoutDashboard } from "lucide-react";
+import { User, LogOut, LayoutDashboard, Globe } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,20 @@ export function Header() {
         <div className="flex items-center gap-4">
           <Link href="/school-admin" className="text-sm font-medium hidden md:block">List your School</Link>
           
+          <DropdownMenu>
+            <DropdownMenuTrigger className="focus:outline-none flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
+              <Globe className="w-4 h-4" />
+              <span className="hidden sm:inline">EN</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem className="cursor-pointer font-bold">🇬🇧 English (EN)</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">🇪🇸 Español (ES)</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">🇩🇪 Deutsch (DE)</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">🇫🇷 Français (FR)</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">🇮🇳 हिन्दी (HI)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {status === "authenticated" ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

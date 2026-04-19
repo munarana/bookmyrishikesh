@@ -149,6 +149,13 @@ model Course {
   priceUSD        Float
   depositPercent  Float       @default(20)
   includedItems   String[]
+  
+  // New fields for Course Manager
+  isPublished     Boolean     @default(false)
+  roomTypes       Json?       // e.g. [{type: "Private", priceAddon: 150}]
+  highlights      String[]
+  excludes        String[]
+  
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -164,6 +171,7 @@ model CourseDate {
   endDate      DateTime
   capacity     Int
   priceModifier Float    @default(1.0) // 1.0 is standard, >1 is high season
+  isActive     Boolean   @default(true)
 
   course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   bookings     Booking[]

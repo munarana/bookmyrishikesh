@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Providers } from "@/components/Providers";
+import { Chatbot } from "@/components/Chatbot";
 
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -27,6 +28,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Chatbot />
         </Providers>
       </body>
     </html>
