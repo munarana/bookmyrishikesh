@@ -23,6 +23,7 @@ interface CourseFormDialogProps {
 export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: CourseFormDialogProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'rooms'>('basic');
   
   const isEditing = !!initialData;
 
@@ -41,6 +42,7 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
 
   useEffect(() => {
     if (isOpen) {
+      setActiveTab('basic');
       if (initialData) {
         setFormData({
           name: initialData.name || '',
@@ -82,12 +84,38 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const focusField = (fieldId: string) => {
+    setActiveTab('basic');
+    setTimeout(() => {
+      const element = document.getElementById(fieldId) as HTMLInputElement | null;
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
+    }, 50);
+  };
+
   const validate = () => {
-    if (!formData.name.trim()) return "Course Title is required.";
-    if (!formData.durationDays || isNaN(Number(formData.durationDays))) return "Valid duration in days is required.";
-    if (!formData.priceUSD || isNaN(Number(formData.priceUSD))) return "Valid Base Price (USD) is required.";
+    if (!formData.name.trim()) {
+      focusField('name');
+      return "Course Title is required.";
+    }
+    if (!formData.durationDays || isNaN(Number(formData.durationDays))) {
+      focusField('durationDays');
+      return "Valid duration in days is required.";
+    }
+    if (!formData.priceUSD || isNaN(Number(formData.priceUSD))) {
+      focusField('priceUSD');
+      return "Valid Base Price (USD) is required.";
+    }
     return null;
   };
+
+  const isFormValid = formData.name.trim() && 
+                     formData.durationDays && 
+                     !isNaN(Number(formData.durationDays)) && 
+                     formData.priceUSD && 
+                     !isNaN(Number(formData.priceUSD));
 
   const handleSubmit = async (isPublished: boolean) => {
     const error = validate();
@@ -157,7 +185,7 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="basic" className="mt-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -170,6 +198,7 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
               <Input 
                 id="name" 
                 placeholder="e.g. 200 Hour Yoga Teacher Training" 
+                autoFocus
                 value={formData.name}
                 onChange={e => handleChange('name', e.target.value)}
               />
@@ -275,10 +304,11 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
         </Tabs>
 
         <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button 
+            type="button"
             variant="secondary" 
             onClick={() => handleSubmit(false)}
             disabled={isLoading}
@@ -288,9 +318,10 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
             Save as Draft
           </Button>
           <Button 
+            type="button"
             onClick={() => handleSubmit(true)}
-            disabled={isLoading}
-            className="bg-orange-500 hover:bg-orange-600 text-white"
+            disabled={isLoading || !isFormValid}
+            className="bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Save & Publish
