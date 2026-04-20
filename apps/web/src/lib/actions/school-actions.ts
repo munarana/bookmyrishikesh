@@ -52,7 +52,7 @@ export async function getPendingSchools() {
     console.warn('DATABASE_URL missing, returning mock pending schools');
     return {
       success: true,
-      data: MOCK_DATA.pendingSchools as any[]
+      data: MOCK_DATA.pendingSchools
     };
   }
 
@@ -94,16 +94,30 @@ export async function updateSchoolStatus(
   }
 
   try {
-    await prisma.school.update({
+    const school = await prisma.school.update({
       where: { id: schoolId },
       data: {
         status,
         applicationNotes: notes,
+        approvedAt: status === SchoolStatus.APPROVED ? new Date() : null,
+        isPublished: status === SchoolStatus.APPROVED,
+      },
+    });
+
+    await prisma.user.update({
+      where: { id: school.ownerId },
+      data: {
+        isActive: status === SchoolStatus.APPROVED,
       },
     });
 
     revalidatePath('/admin/approvals');
     revalidatePath('/admin');
+    revalidatePath('/admin/users');
+    revalidatePath('/school-admin');
+    revalidatePath(`/schools/${school.slug}`);
+    revalidatePath('/schools');
+    revalidatePath('/search');
     
     return { success: true };
   } catch (error) {

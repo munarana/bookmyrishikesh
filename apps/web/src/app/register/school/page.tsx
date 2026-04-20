@@ -22,8 +22,13 @@ export default function SchoolRegistrationPage() {
     ownerName: "",
     email: "",
     password: "",
+    phone: "",
     address: "",
     website: "",
+    tagline: "",
+    businessRegistrationNo: "",
+    yogaCertificateUrl: "",
+    personalIdUrl: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -39,7 +44,20 @@ export default function SchoolRegistrationPage() {
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, role: "SCHOOL_ADMIN" }),
+        body: JSON.stringify({
+          role: "SCHOOL_ADMIN",
+          name: formData.ownerName,
+          schoolName: formData.schoolName,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          address: formData.address,
+          website: formData.website,
+          tagline: formData.tagline,
+          businessRegistrationNo: formData.businessRegistrationNo,
+          yogaCertificateUrl: formData.yogaCertificateUrl,
+          personalIdUrl: formData.personalIdUrl,
+        }),
       });
 
       const data = await response.json();
@@ -67,7 +85,7 @@ export default function SchoolRegistrationPage() {
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
           <h2 className="text-3xl font-bold font-heading mb-4">Application Submitted!</h2>
           <p className="text-slate-600 mb-8">
-            Thank you for applying to partner with YogaRishikesh. Your application is now being reviewed by our team.
+            Thank you for applying to partner with YogaRishikesh. Your school account and listing are now waiting for super admin approval.
           </p>
           <div className="bg-emerald-50 p-4 rounded-lg text-emerald-800 text-sm mb-8">
             Check your email for further instructions on completing your profile.
@@ -166,6 +184,29 @@ export default function SchoolRegistrationPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">WhatsApp / Phone</Label>
+                  <Input
+                    id="phone"
+                    placeholder="+91 98XXXXXX12"
+                    required
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessRegistrationNo">Business Registration No.</Label>
+                  <Input
+                    id="businessRegistrationNo"
+                    placeholder="UKD-RYS-2026-011"
+                    required
+                    value={formData.businessRegistrationNo}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="address">School Address in Rishikesh</Label>
                 <Textarea 
@@ -186,6 +227,42 @@ export default function SchoolRegistrationPage() {
                   value={formData.website}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tagline">Short Tagline</Label>
+                <Input
+                  id="tagline"
+                  placeholder="Authentic TTCs and retreats in Upper Tapovan"
+                  required
+                  value={formData.tagline}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="yogaCertificateUrl">Yoga Certificate URL</Label>
+                  <Input
+                    id="yogaCertificateUrl"
+                    type="url"
+                    placeholder="https://..."
+                    required
+                    value={formData.yogaCertificateUrl}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="personalIdUrl">Owner ID URL</Label>
+                  <Input
+                    id="personalIdUrl"
+                    type="url"
+                    placeholder="https://..."
+                    required
+                    value={formData.personalIdUrl}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">

@@ -1,174 +1,193 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Search, Calendar, Users, Star, ArrowRight, PlayCircle } from "lucide-react";
+import { Calendar, CheckCircle, Globe, MapPin, MessageSquare, Star } from "lucide-react";
+import { getHomepageData } from "@/lib/queries/public-listings";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+function formatDate(date?: Date) {
+  if (!date) return "Flexible dates available";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export default async function HomePage() {
+  const { featuredCourses, featuredSchools, stats } = await getHomepageData();
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Immersive Cinematic Hero */}
-      <section className="relative w-full h-[90vh] min-h-[700px] flex items-center justify-center overflow-hidden">
-        {/* Deep, rich imagery with elegant gradients instead of harsh flat colors */}
-        <div className="absolute inset-0 bg-primary/20 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent z-10" />
-        <Image 
-          src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2000&auto=format&fit=crop"
-          alt="Luxury Yoga in Rishikesh"
-          fill
-          className="object-cover scale-105 animate-[kenburns_20s_ease-out_forwards]"
-          priority
-        />
-        
-        <div className="relative z-20 container px-4 mx-auto text-center translate-y-[-10%]">
-          <span className="inline-block py-1 px-4 border border-white/30 rounded-full text-white/90 text-xs tracking-[0.2em] uppercase font-bold mb-6 backdrop-blur-md bg-white/10">
-            The Capital of Yoga
-          </span>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-heading font-medium text-white tracking-tight drop-shadow-2xl mb-6">
-            Find Your <span className="text-accent italic font-serif">Center.</span>
-          </h1>
-          <p className="text-lg md:text-2xl text-white/80 font-light max-w-2xl mx-auto mb-12 drop-shadow-md">
-            Discover verified, world-class ashrams and transformative TTC programs exclusively in Rishikesh, India.
-          </p>
-          
-          {/* Glassmorphism Floating Search Bar */}
-          <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-xl border border-white/20 p-2 md:p-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-2">
-            <div className="flex-1 flex w-full items-center px-4 py-3 bg-white/95 rounded-xl md:rounded-full hover:shadow-inner transition-all group cursor-text">
-              <MapPin className="w-5 h-5 text-primary/50 group-hover:text-amber-500 transition-colors mr-3" />
-              <div className="text-left w-full">
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Experience</div>
-                <input type="text" placeholder="e.g. 200 Hour TTC, Hatha..." className="w-full bg-transparent border-none outline-none text-sm placeholder:text-slate-400 font-medium text-primary" />
-              </div>
-            </div>
-            
-            <div className="flex-1 flex w-full items-center px-4 py-3 bg-white/95 rounded-xl md:rounded-full hover:shadow-inner transition-all group cursor-text">
-              <Calendar className="w-5 h-5 text-primary/50 group-hover:text-amber-500 transition-colors mr-3" />
-              <div className="text-left w-full">
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dates</div>
-                <input type="text" placeholder="Add dates" className="w-full bg-transparent border-none outline-none text-sm placeholder:text-slate-400 font-medium text-primary" />
-              </div>
-            </div>
-            
-            <Link href="/search" className="w-full md:w-auto shrink-0">
-              <Button size="lg" className="w-full md:w-auto h-16 md:h-full px-8 rounded-xl md:rounded-full bg-accent hover:bg-amber-400 text-primary font-bold text-lg shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02]">
-                <Search className="w-5 h-5 md:mr-2" />
-                <span className="md:hidden lg:inline">Search Path</span>
+    <div className="min-h-screen bg-[#f7f3ea]">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=2200&auto=format&fit=crop"
+            alt="Yoga in Rishikesh"
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/70 via-emerald-950/60 to-amber-900/50" />
+        </div>
+
+        <div className="relative mx-auto flex min-h-[88vh] max-w-7xl flex-col justify-center px-4 py-24 text-white">
+          <div className="max-w-3xl">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] backdrop-blur">
+              <Globe className="h-3.5 w-3.5 text-amber-300" />
+              Live Rishikesh Yoga Marketplace
+            </p>
+            <h1 className="max-w-4xl text-5xl font-bold leading-tight md:text-7xl">
+              Book approved yoga schools, TTCs, and retreats from one live platform.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg text-white/80 md:text-xl">
+              Compare live course dates, room types, and direct enquiries from verified schools in Rishikesh.
+              Every public card below is coming from the same realtime database your admins manage.
+            </p>
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <Button asChild size="lg" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
+                <Link href="/search">Explore Live Courses</Link>
               </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof Bar */}
-      <section className="bg-primary text-primary-foreground py-8 border-b border-white/10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center md:justify-between items-center gap-8 opacity-80 font-medium text-sm md:text-base">
-            <div className="flex items-center gap-2"><Star className="w-5 h-5 text-accent fill-accent"/> 4.9/5 Average Rating</div>
-            <div className="flex items-center gap-2"><Users className="w-5 h-5"/> 12,000+ Students Graduated</div>
-            <div className="hidden md:flex items-center gap-2"><MapPin className="w-5 h-5"/> 150+ Verified Ashrams</div>
-            <div className="flex items-center gap-2 font-bold italic tracking-wide text-accent">#1 Platform for Rishikesh</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Exquisite Curated Categories */}
-      <section className="py-24 bg-[#FAF9F5]">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12">
-            <div className="max-w-2xl">
-              <h2 className="text-sm font-bold tracking-widest uppercase text-accent mb-2">Curated Experiences</h2>
-              <h3 className="text-4xl md:text-5xl font-heading font-bold text-primary">Begin Your Journey.</h3>
+              <Button asChild size="lg" variant="outline" className="border-white/30 bg-white/5 text-white hover:bg-white/10">
+                <Link href="/register/school">Register Your School</Link>
+              </Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { title: "200-Hour TTC", desc: "Foundation Certification", img: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80" },
-              { title: "Wellness Retreats", desc: "Digital Detox & Spa", img: "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=600&q=80" },
-              { title: "Ayurveda", desc: "Ancient Healing", img: "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=600&q=80" },
-              { title: "Meditation", desc: "Silent Vipassana", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80" },
-            ].map((cat) => (
-              <Link href={`/search?category=${cat.title.toLowerCase()}`} key={cat.title} className="group block">
-                <div className="relative h-80 rounded-2xl overflow-hidden shadow-lg shadow-black/5">
-                  <div className="absolute inset-0 bg-primary/20 group-hover:bg-transparent transition-colors duration-700 z-10" />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                  <Image src={cat.img} alt={cat.title} fill className="object-cover scale-100 group-hover:scale-110 transition-transform duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]" />
-                  <div className="absolute bottom-6 left-6 z-20">
-                    <p className="text-white/80 text-xs font-bold uppercase tracking-wider mb-1">{cat.desc}</p>
-                    <h4 className="text-2xl font-heading font-medium text-white">{cat.title}</h4>
+      <section className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-10 md:grid-cols-3">
+        <div className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="text-4xl font-bold text-slate-900">{stats.approvedSchoolCount}</div>
+          <div className="mt-2 text-sm font-medium text-slate-500">Approved schools live now</div>
+        </div>
+        <div className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="text-4xl font-bold text-slate-900">{stats.publishedCourseCount}</div>
+          <div className="mt-2 text-sm font-medium text-slate-500">Published courses and retreats</div>
+        </div>
+        <div className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="text-4xl font-bold text-slate-900">{stats.inquiryCount}</div>
+          <div className="mt-2 text-sm font-medium text-slate-500">Live student enquiries in the system</div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-8">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">Featured Courses</p>
+            <h2 className="mt-2 text-4xl font-bold text-slate-900">Teacher trainings and retreats live right now</h2>
+          </div>
+          <Link href="/search" className="text-sm font-semibold text-slate-700 underline-offset-4 hover:underline">
+            View all courses
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {featuredCourses.map((course) => {
+            const nextDate = course.courseDates[0];
+            const heroImage = course.school.coverPhoto || course.school.gallery[0] || "https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1200&auto=format&fit=crop";
+
+            return (
+              <Link
+                key={course.id}
+                href={`/schools/${course.school.slug}`}
+                className="group overflow-hidden rounded-[28px] bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="relative h-64">
+                  <Image src={heroImage} alt={course.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900">
+                    {course.category.replaceAll("_", " ")}
                   </div>
-                  <div className="absolute top-6 right-6 z-20 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-500">
-                    <ArrowRight className="w-5 h-5" />
+                  <div className="absolute bottom-5 left-5 right-5 text-white">
+                    <div className="text-xs uppercase tracking-[0.18em] text-white/70">{course.school.name}</div>
+                    <h3 className="mt-2 text-2xl font-bold leading-tight">{course.name}</h3>
+                  </div>
+                </div>
+                <div className="space-y-4 p-6">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <MapPin className="h-4 w-4" />
+                    {course.school.address || "Rishikesh, India"}
+                  </div>
+                  <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">{course.description}</p>
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <Calendar className="h-4 w-4" />
+                        {formatDate(nextDate?.startDate)}
+                      </div>
+                      <div className="text-xs uppercase tracking-[0.15em] text-slate-400">{course.durationDays} days</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-slate-400">From</div>
+                      <div className="text-2xl font-bold text-slate-900">${Math.round(course.priceUSD)}</div>
+                    </div>
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* Premium Spotlight / Bento Box Layout for Top Schools */}
-      <section className="py-24 bg-white overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-sm font-bold tracking-widest uppercase text-accent mb-2">The Platinum Collection</h2>
-            <h3 className="text-4xl md:text-5xl font-heading font-bold text-primary mb-4">Legendary Schools</h3>
-            <p className="text-lg text-slate-500 font-light">We handpick only the highest rated, most serene sanctuaries in Rishikesh so you never have to guess.</p>
+      <section className="mx-auto max-w-7xl px-4 py-10">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Approved Schools</p>
+            <h2 className="mt-2 text-4xl font-bold text-slate-900">Profiles that super admin has already approved</h2>
           </div>
+          <Link href="/schools" className="text-sm font-semibold text-slate-700 underline-offset-4 hover:underline">
+            Browse all schools
+          </Link>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[600px]">
-             {/* Left Massive Featured Card */}
-            <Link href="/schools/satvic-yoga-academy" className="lg:col-span-7 relative rounded-3xl overflow-hidden shadow-2xl group flex flex-col justify-end">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
-              <Image src="https://images.unsplash.com/photo-1508704019882-f9cf40e475b4?w=1200&q=80" alt="Satvic Yoga" fill className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-in-out" />
-              
-              <div className="relative z-20 p-8 md:p-12">
-                <div className="flex gap-2 mb-4">
-                  <span className="bg-emerald-500/20 text-emerald-300 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/30">Verified</span>
-                  <span className="bg-black/40 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Star className="w-3 h-3 fill-accent text-accent" /> 5.0 (200+)</span>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {featuredSchools.map((school) => (
+            <Link
+              key={school.id}
+              href={`/schools/${school.slug}`}
+              className="overflow-hidden rounded-[28px] bg-[#133b33] text-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div className="relative h-56">
+                <Image
+                  src={school.coverPhoto || school.gallery[0] || "https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1200&auto=format&fit=crop"}
+                  alt={school.name}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#133b33] to-transparent" />
+              </div>
+              <div className="space-y-4 p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold">{school.name}</h3>
+                  <div className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-sm">
+                    <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
+                    {school.avgRating.toFixed(1)}
+                  </div>
                 </div>
-                <h4 className="text-4xl md:text-5xl font-heading font-bold text-white mb-2 leading-tight">Satvic Yoga Academy</h4>
-                <p className="text-white/80 font-light max-w-md hidden md:block mb-6">Experience profound awakening in their legendary 200-Hour immersion alongside the majestic Ganges.</p>
-                <div className="inline-flex items-center gap-2 text-accent font-bold group-hover:text-white transition-colors">
-                  Explore Ashram <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                <p className="text-sm leading-relaxed text-white/80">{school.tagline || school.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {school.styles.slice(0, 3).map((style) => (
+                    <span key={style} className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/80">
+                      {style}
+                    </span>
+                  ))}
+                </div>
+                <div className="space-y-2 border-t border-white/10 pt-4 text-sm text-white/75">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-emerald-300" />
+                    {school.courses.length} highlighted programs
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-amber-300" />
+                    Direct enquiries enabled
+                  </div>
                 </div>
               </div>
             </Link>
-
-            {/* Right Stacked Cards */}
-            <div className="lg:col-span-5 flex flex-col gap-8 h-full">
-              <Link href="/schools/anand-prakash" className="flex-1 relative rounded-3xl overflow-hidden shadow-xl group">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                <Image src="https://images.unsplash.com/photo-1447452001602-7090c7ab2db3?w=800&q=80" alt="Anand Prakash" fill className="object-cover group-hover:scale-105 transition-transform duration-1000" />
-                <div className="relative z-20 p-8 h-full flex flex-col justify-end">
-                  <h4 className="text-2xl font-heading font-bold text-white mb-1">Anand Prakash</h4>
-                  <p className="text-white/70 text-sm">Deep Akhanda Yoga Tradition</p>
-                </div>
-              </Link>
-              
-              <Link href="/schools/himalayan-iyengar" className="flex-1 relative rounded-3xl overflow-hidden shadow-xl group">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                <Image src="https://images.unsplash.com/photo-1599447421416-3414500d18a5?w=800&q=80" alt="Iyengar Center" fill className="object-cover group-hover:scale-105 transition-transform duration-1000" />
-                <div className="relative z-20 p-8 h-full flex flex-col justify-end">
-                  <h4 className="text-2xl font-heading font-bold text-white mb-1">Himalayan Iyengar</h4>
-                  <p className="text-white/70 text-sm">Precision, alignment, therapy.</p>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Mini Editorial Banner */}
-      <section className="py-24 relative bg-primary overflow-hidden">
-        <div className="absolute inset-0 opacity-10 blur-sm">
-          <Image src="https://images.unsplash.com/photo-1534063854199-6e3e57d6052f?w=1600&q=80" alt="Texture" fill className="object-cover" />
-        </div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <PlayCircle className="w-16 h-16 text-accent mx-auto mb-6 hover:scale-110 cursor-pointer transition-transform" />
-          <h2 className="text-3xl md:text-5xl font-heading font-bold text-white mb-6">See why Rishikesh is calling you.</h2>
-          <p className="text-white/80 max-w-2xl mx-auto text-lg mb-8">Take a breathtaking 2-minute cinematic journey through the foothills of the Himalayas where thousands find their purpose every year.</p>
-          <Button className="rounded-full bg-white text-primary hover:bg-slate-100 font-bold px-8">Watch Documentary</Button>
+          ))}
         </div>
       </section>
     </div>

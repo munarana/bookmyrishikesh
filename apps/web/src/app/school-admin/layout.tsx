@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { LayoutDashboard, Users, BookOpen, Calendar as CalendarIcon, MessageSquare, Image as ImageIcon, DollarSign, Settings, LogOut } from "lucide-react";
 
@@ -11,12 +12,24 @@ export default async function SchoolAdminLayout({ children }: { children: React.
     redirect("/login");
   }
 
+  const school = await prisma.school.findFirst({
+    where: { ownerId: session.user.id },
+    select: {
+      name: true,
+      _count: {
+        select: {
+          inquiries: true,
+        },
+      },
+    },
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row mt-16">
       {/* Sidebar sidebar */}
       <aside className="w-full md:w-64 bg-white border-r border-border shrink-0 flex flex-col h-auto md:min-h-[calc(100vh-64px)]">
         <div className="p-6 border-b border-border">
-          <h2 className="font-heading font-bold text-lg text-primary truncate">Satvic Yoga Academy</h2>
+          <h2 className="font-heading font-bold text-lg text-primary truncate">{school?.name || "School Admin"}</h2>
           <p className="text-xs text-muted-foreground mt-1">Admin Portal</p>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -33,7 +46,7 @@ export default async function SchoolAdminLayout({ children }: { children: React.
             <Users className="w-4 h-4" /> Bookings
           </Link>
           <Link href="/school-admin/enquiries" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100 hover:text-foreground">
-            <MessageSquare className="w-4 h-4" /> Enquiries <span className="ml-auto bg-accent text-primary text-[10px] px-1.5 rounded-full font-bold">3</span>
+            <MessageSquare className="w-4 h-4" /> Enquiries <span className="ml-auto bg-accent text-primary text-[10px] px-1.5 rounded-full font-bold">{school?._count.inquiries ?? 0}</span>
           </Link>
           <Link href="/school-admin/gallery" className="flex items-center gap-3 px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-slate-100 hover:text-foreground">
             <ImageIcon className="w-4 h-4" /> Photos & Videos

@@ -4,13 +4,23 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@repo/database";
 import bcrypt from "bcryptjs";
+import { env } from "@/lib/env";
+
+async function getSchoolIdForUser(userId: string) {
+  const school = await prisma.school.findUnique({
+    where: { ownerId: userId },
+    select: { id: true },
+  });
+
+  return school?.id;
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "mock_id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "mock_secret",
+      clientId: env.GOOGLE_CLIENT_ID || "mock_id",
+      clientSecret: env.GOOGLE_CLIENT_SECRET || "mock_secret",
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -27,49 +37,58 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        console.log("Authorize check for:", credentials.email, "User found:", !!user);
-
-        if (!user || !user.password) {
-          throw new Error("User not found or password not set");
+        if (!user || !user.password || !user.isActive) {
+          throw new Error("Invalid credentials");
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-        console.log("Password valid for", credentials.email, ":", isPasswordValid);
 
         if (!isPasswordValid) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid credentials");
         }
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        }).catch(() => null);
+
+        const schoolId = user.role === "SCHOOL_ADMIN" ? await getSchoolIdForUser(user.id) : undefined;
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,
+          schoolId,
         };
       },
     }),
   ],
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 30,
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role;
+        token.role = user.role;
         token.id = user.id;
+        token.schoolId = user.schoolId;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = token.role;
-        (session.user as any).id = token.id;
+        session.user.role = token.role;
+        session.user.id = token.id;
+        session.user.schoolId = token.schoolId;
       }
       return session;
     },
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
 };

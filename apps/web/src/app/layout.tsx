@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Providers } from "@/components/Providers";
-
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+import { Chatbot } from "@/components/Chatbot";
 
 export const metadata: Metadata = {
   title: "YogaRishikesh.com | Book Top Yoga Retreats & TTC",
@@ -20,13 +17,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${playfair.variable} ${inter.variable} antialiased min-h-screen flex flex-col`}>
+      <body className="antialiased min-h-screen flex flex-col">
         <Providers>
           <Header />
           <main className="flex-1">
             {children}
           </main>
           <Footer />
+          <Chatbot />
         </Providers>
       </body>
     </html>

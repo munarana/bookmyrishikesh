@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle, 
   XCircle, 
-  Eye, 
   FileText, 
   Shield, 
   ChevronLeft, 
@@ -14,13 +13,27 @@ import {
   MapPin,
   Calendar
 } from "lucide-react";
-import { getPendingSchools } from "@/lib/actions/school-actions";
+import { getPendingSchools, updateSchoolStatus } from "@/lib/actions/school-actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function SchoolApprovalsPage() {
   const result = await getPendingSchools();
   const schools = (result.success && result.data) ? result.data : [];
+
+  async function approveSchool(formData: FormData) {
+    "use server";
+    const schoolId = String(formData.get("schoolId") || "");
+    if (!schoolId) return;
+    await updateSchoolStatus(schoolId, "APPROVED");
+  }
+
+  async function rejectSchool(formData: FormData) {
+    "use server";
+    const schoolId = String(formData.get("schoolId") || "");
+    if (!schoolId) return;
+    await updateSchoolStatus(schoolId, "REJECTED", "Application rejected by super admin review.");
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row mt-16 font-sans">
@@ -72,7 +85,7 @@ export default async function SchoolApprovalsPage() {
           </Card>
         ) : (
           <div className="space-y-6">
-            {schools.map((school: any) => (
+            {schools.map((school) => (
               <Card key={school.id} className="border-none shadow-sm bg-white rounded-xl overflow-hidden">
                 <div className="flex flex-col lg:flex-row">
                   {/* Left Column: Basic Info */}
@@ -162,17 +175,23 @@ export default async function SchoolApprovalsPage() {
                     <div>
                       <h4 className="font-semibold text-sm text-slate-900 mb-2">Internal Assessment</h4>
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        Verify that the certificate matches the owner's legal name and the school is physically located in Rishikesh as stated.
+                        Verify that the certificate matches the owner&apos;s legal name and the school is physically located in Rishikesh as stated.
                       </p>
                     </div>
 
                     <div className="flex gap-3 mt-8">
-                      <Button variant="outline" className="flex-1 gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900">
-                        <XCircle className="w-4 h-4" /> Reject
-                      </Button>
-                      <Button className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20">
-                        <CheckCircle className="w-4 h-4" /> Approve
-                      </Button>
+                      <form action={rejectSchool} className="flex-1">
+                        <input type="hidden" name="schoolId" value={school.id} />
+                        <Button variant="outline" className="w-full gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                          <XCircle className="w-4 h-4" /> Reject
+                        </Button>
+                      </form>
+                      <form action={approveSchool} className="flex-1">
+                        <input type="hidden" name="schoolId" value={school.id} />
+                        <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20">
+                          <CheckCircle className="w-4 h-4" /> Approve
+                        </Button>
+                      </form>
                     </div>
                   </div>
                 </div>

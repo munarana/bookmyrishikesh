@@ -10,26 +10,38 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Calendar, Heart, Award, User, Clock, MapPin, Download, Loader2 } from "lucide-react";
 import Image from "next/image";
 
+function getDashboardTabFromHash(hash: string) {
+  const normalizedHash = hash.replace("#", "");
+  if (["past", "saved", "certificates"].includes(normalizedHash)) {
+    return normalizedHash;
+  }
+  if (normalizedHash === "bookings") {
+    return "past";
+  }
+  if (normalizedHash === "wishlist") {
+    return "saved";
+  }
+  return "past";
+}
+
 export default function StudentDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("past");
+  const [activeTab, setActiveTab] = useState(() =>
+    typeof window === "undefined" ? "past" : getDashboardTabFromHash(window.location.hash)
+  );
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
-    
-    // Check hash on mount to set initial tab
-    const hash = window.location.hash.replace("#", "");
-    if (["past", "saved", "certificates"].includes(hash)) {
-      setActiveTab(hash);
-    } else if (hash === "bookings") {
-      setActiveTab("past");
-    } else if (hash === "wishlist") {
-      setActiveTab("saved");
-    }
   }, [status, router]);
+
+  useEffect(() => {
+    const syncTabWithHash = () => setActiveTab(getDashboardTabFromHash(window.location.hash));
+    window.addEventListener("hashchange", syncTabWithHash);
+    return () => window.removeEventListener("hashchange", syncTabWithHash);
+  }, []);
 
   if (status === "loading") {
     return (
@@ -41,8 +53,8 @@ export default function StudentDashboard() {
 
   if (!session) return null;
 
-  const user = session.user as any;
-  const userInitials = user?.name ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase() : "U";
+  const user = session.user;
+  const userInitials = user?.name ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase() : "U";
 
   const handleSidebarClick = (tab: string) => {
     setActiveTab(tab);

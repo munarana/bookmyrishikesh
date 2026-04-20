@@ -9,8 +9,67 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, User, GraduationCap, Loader2 } from "lucide-react";
+import { ShieldAlert, User, GraduationCap, Loader2, MailCheck } from "lucide-react";
 import Image from "next/image";
+
+function ForgotPasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send reset link");
+      setSent(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to send reset link");
+    } finally {
+      setLoading(false);
+    }
+  };
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative animate-in fade-in">
+        <button className="absolute top-2 right-2 text-slate-400 hover:text-slate-700" onClick={onClose}>&times;</button>
+        {sent ? (
+          <div className="flex flex-col items-center text-center">
+            <MailCheck className="w-12 h-12 text-emerald-500 mb-4" />
+            <h2 className="text-xl font-bold mb-2">Check your email</h2>
+            <p className="text-slate-600 mb-4">A password reset link has been sent if the email exists in our system.</p>
+            <Button onClick={onClose} className="w-full">Close</Button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold mb-2">Forgot Password?</h2>
+              <p className="text-slate-600 text-sm">Enter your registered email to receive a password reset link.</p>
+            </div>
+            {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-md p-2 text-sm">{error}</div>}
+            <Input
+              id="forgot-email"
+              type="email"
+              placeholder="your@email.com"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+            <Button type="submit" className="w-full" disabled={loading}>{loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Send Reset Link"}</Button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,8 +78,9 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [forgotOpen, setForgotOpen] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent, type: "student" | "school") => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -49,8 +109,8 @@ export default function LoginPage() {
         }
         router.refresh();
       }
-    } catch (err) {
-      setError("An unexpected error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -97,7 +157,7 @@ export default function LoginPage() {
                 <CardTitle className="text-2xl font-bold font-heading">Student Login</CardTitle>
                 <CardDescription>Log in to view your bookings and certificates.</CardDescription>
               </CardHeader>
-              <form onSubmit={(e) => handleLogin(e, "student")}>
+              <form onSubmit={handleLogin}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="s-email">Email</Label>
@@ -113,7 +173,7 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="s-password">Password</Label>
-                      <Link href="#" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+                      <button type="button" className="text-xs text-primary hover:underline font-medium" onClick={() => setForgotOpen(true)}>Forgot password?</button>
                     </div>
                     <Input 
                       id="s-password" 
@@ -142,13 +202,19 @@ export default function LoginPage() {
                     className="w-full h-12 text-slate-700 bg-white border-slate-300 hover:bg-slate-50"
                     onClick={handleGoogleLogin}
                   >
-                    <img src="https://cdn.iconscout.com/icon/free/png-256/free-google-1772223-1507807.png" alt="Google" className="w-5 h-5 mr-2" />
+                    <Image
+                      src="https://cdn.iconscout.com/icon/free/png-256/free-google-1772223-1507807.png"
+                      alt="Google"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5 mr-2"
+                    />
                     Sign in with Google
                   </Button>
                 </CardContent>
               </form>
               <CardFooter className="flex justify-center border-t border-slate-100 mt-4 pt-6">
-                <p className="text-sm text-slate-600">Don&apos;t have an account? <Link href="/register" className="text-primary font-bold hover:underline">Sign up</Link></p>
+                <p className="text-sm text-slate-600">Don&apos;t have a student account? <Link href="/register" className="text-primary font-bold hover:underline">Sign up</Link></p>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -159,7 +225,7 @@ export default function LoginPage() {
                 <CardTitle className="text-2xl font-bold font-heading">School Admin Portal</CardTitle>
                 <CardDescription>Manage your yoga school, courses, and incoming bookings.</CardDescription>
               </CardHeader>
-              <form onSubmit={(e) => handleLogin(e, "school")}>
+              <form onSubmit={handleLogin}>
                 <CardContent className="space-y-4">
                   <div className="bg-amber-50 border border-amber-200 p-3 rounded-md flex items-start gap-3 mb-4">
                     <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -179,7 +245,7 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="a-password">Password</Label>
-                      <Link href="#" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+                      <button type="button" className="text-xs text-primary hover:underline font-medium" onClick={() => setForgotOpen(true)}>Forgot password?</button>
                     </div>
                     <Input 
                       id="a-password" 
@@ -209,11 +275,12 @@ export default function LoginPage() {
         </Tabs>
         
         <div className="mt-8 text-center text-xs text-slate-500 hover:text-slate-700 transition-colors">
-          <Link href="/admin/login" className="flex items-center justify-center gap-1 opacity-60 hover:opacity-100">
-            <ShieldAlert className="w-3 h-3" /> SuperAdmin Login Area
-          </Link>
+          <span className="flex items-center justify-center gap-1 opacity-60">
+            <ShieldAlert className="w-3 h-3" /> Super admins use the same login form
+          </span>
         </div>
       </div>
+      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} />
     </div>
   );
 }
