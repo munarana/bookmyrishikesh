@@ -1,44 +1,67 @@
-# YogaRishikesh.com — Premium Yoga Booking Platform
+# YogaRishikesh / Pranayama
 
-Build for the Yoga Capital of the world, Rishikesh, India. Better and faster than BookRetreats.com and BookYogaRetreat.com.
+YogaRishikesh is a multi-role yoga marketplace for Rishikesh, India. It supports public discovery, student bookings, school-admin course management, and super-admin content and approval workflows.
 
-## Tech Stack
-- **Frontend**: Next.js 14 (App Router)
-- **Styling**: TailwindCSS + shadcn/ui
-- **Database**: PostgreSQL with Prisma ORM
-- **Auth**: NextAuth.js
-- **UI Components**: Radix UI + Lucide React
+## Stack
 
-## Project Structure
-- `apps/web`: The Next.js application
-- `packages/database`: Prisma schema and database client
-- `packages/ui`: Shared design system and Tailwind configuration
+- Next.js 16 App Router
+- TypeScript
+- Tailwind CSS + shadcn/ui
+- Prisma + PostgreSQL
+- NextAuth.js v4
+- Zod
 
-## Getting Started
+## Repo Layout
 
-### 1. Prerequisites
-- Node.js 18+
-- PostgreSQL database
+- `apps/web`: main Next.js application
+- `packages/database`: Prisma schema, seed, and shared Prisma client
+- `packages/ui`: shared styling assets
 
-### 2. Installation
+## Setup
+
+1. Clone the repository.
+2. Copy `.env.example` to `.env` at the repository root and fill in the required values.
+3. Install dependencies:
+
 ```bash
 npm install
 ```
 
-### 3. Database Setup
-Create a `.env` file in `packages/database` with your `DATABASE_URL`:
+4. Generate and apply the Prisma schema:
+
 ```bash
-DATABASE_URL="postgresql://user:password@localhost:5432/yogarishikesh"
-```
-Then sync the schema:
-```bash
+npm run db:generate
 npm run db:push
 ```
 
-### 4. Run Development Server
+5. Seed the database:
+
+```bash
+npm run db:seed
+```
+
+6. Start the app:
+
 ```bash
 npm run dev
 ```
 
-## Deployment
-Recommended: **Vercel** for frontend and **Neon/Railway** for PostgreSQL.
+7. Open `http://localhost:3000`.
+
+## Verification
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## Seeded Credentials
+
+- Super Admin: `admin@yogarishikesh.com` / `Admin@123456`
+- Approved School Admin: `ganga.flow@example.com` / `School@123`
+- Approved School Admin: `satva.roots@example.com` / `School@123`
+- Pending School Admin: `kriya.shakti@example.com` / `School@123` (inactive until approved)
+- Approved Student: `aarav.malhotra@example.com` / `Student@123`
+- Approved Student: `emily.carter@example.com` / `Student@123`
+- Pending Student: `noah.brooks@example.com` / `Student@123` (inactive until approved)
