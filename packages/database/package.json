@@ -8,8 +8,12 @@
     "build": "tsc",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts",
     "postinstall": "npm run db:generate"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",

@@ -9,9 +9,8 @@ import Link from "next/link";
 
 export default async function SchoolAdminDashboard() {
   const session = await getServerSession(authOptions);
-  
   if (!session || (session.user as any).role !== "SCHOOL_ADMIN") {
-    redirect("/login");
+    redirect("/unauthorized");
   }
 
   // Fetch school for the logged in owner

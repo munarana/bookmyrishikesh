@@ -58,6 +58,14 @@ export default function CourseManagerPage() {
     localStorage.setItem('courseManagerViewMode', mode);
   };
 
+  const handleTypeFilterChange = (value: string | null) => {
+    setTypeFilter(value || 'ALL');
+  };
+
+  const handleStatusFilterChange = (value: string | null) => {
+    setStatusFilter(value || 'ALL');
+  };
+
   const fetchCourses = async () => {
     setIsLoading(true);
     try {
@@ -160,9 +168,9 @@ export default function CourseManagerPage() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
+        onTypeFilterChange={handleTypeFilterChange}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         onAddCourse={openAdd}

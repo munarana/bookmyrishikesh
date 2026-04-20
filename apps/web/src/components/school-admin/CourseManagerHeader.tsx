@@ -15,9 +15,9 @@ interface CourseManagerHeaderProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   typeFilter: string;
-  onTypeFilterChange: (value: string) => void;
+  onTypeFilterChange: (value: string | null) => void;
   statusFilter: string;
-  onStatusFilterChange: (value: string) => void;
+  onStatusFilterChange: (value: string | null) => void;
   viewMode: 'table' | 'grid';
   onViewModeChange: (mode: 'table' | 'grid') => void;
   onAddCourse: () => void;
@@ -94,6 +94,7 @@ export function CourseManagerHeader({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All Types</SelectItem>
+              <SelectItem value="TTC_100HR">TTC 100HR</SelectItem>
               <SelectItem value="TTC_200HR">TTC 200HR</SelectItem>
               <SelectItem value="TTC_300HR">TTC 300HR</SelectItem>
               <SelectItem value="TTC_500HR">TTC 500HR</SelectItem>

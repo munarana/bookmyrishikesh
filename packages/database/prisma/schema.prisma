@@ -13,13 +13,13 @@ enum Role {
   SUPER_ADMIN
 }
 
-enum BookingStatus {
-  PENDING
-  DEPOSIT_PAID
-  FULL_PAID
-  REFUNDED
-  DISPUTED
-  CANCELLED
+enum CourseType {
+  TTC_200HR
+  TTC_300HR
+  TTC_500HR
+  RETREAT
+  WORKSHOP
+  MEDITATION
 }
 
 enum CourseLevel {
@@ -29,40 +29,95 @@ enum CourseLevel {
   ALL_LEVELS
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  phone         String?
-  nationality   String?
-  passportNo    String?
-  role          Role      @default(STUDENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+enum BookingStatus {
+  PENDING
+  DEPOSIT_PAID
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
 
-  accounts      Account[]
-  sessions      Session[]
-  bookings      Booking[]
-  reviews       Review[]
-  schools       School[]  @relation("SchoolOwner")
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlogCategory {
+  YOGA_TIPS
+  TTC_GUIDE
+  RISHIKESH_TRAVEL
+  WELLNESS
+  RETREAT_GUIDE
+  SCHOOL_SPOTLIGHT
+  STUDENT_STORIES
+}
+
+enum SchoolStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  password       String?
+  image          String?
+  phone          String?
+  nationality    String?
+  passportNo     String?
+  role           Role      @default(STUDENT)
+  isActive       Boolean   @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  bookings       Booking[]
+  reviews        Review[]
+  school         School?   @relation("SchoolOwner")
+  blogPosts      BlogPost[] @relation("BlogAuthor")
+  savedSchools   SavedSchool[]
+  auditLogs      AuditLog[]
+  inquiries      Inquiry[]
+
+  @@index([email])
+  @@index([role])
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -74,7 +129,8 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -85,139 +141,293 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-enum SchoolStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  INACTIVE
-}
-
 model School {
-  id             String   @id @default(cuid())
-  slug           String   @unique
-  name           String
-  description    String
-  establishedYear Int?
-  address        String?
-  latitude       Float?
-  longitude      Float?
-  phone          String?
-  whatsapp       String?
-  status         SchoolStatus @default(PENDING)
-  commissionRate Float    @default(10.0)
-  coverPhoto     String?
-  gallery        String[]
-  virtualTourUrl String?
-  
-  // Verification Fields
-  yogaCertificateUrl  String?
-  personalIdUrl       String?
+  id                     String       @id @default(cuid())
+  ownerId                String       @unique
+  slug                   String       @unique
+  name                   String
+  tagline                String?
+  description            String?
+  establishedYear        Int?
+  address                String?
+  city                   String       @default("Rishikesh")
+  state                  String       @default("Uttarakhand")
+  country                String       @default("India")
+  latitude               Float?
+  longitude              Float?
+  phone                  String?
+  whatsapp               String?
+  email                  String?
+  website                String?
+  logo                   String?
+  coverPhoto             String?
+  gallery                String[]
+  virtualTourUrl         String?
+  status                 SchoolStatus @default(PENDING)
+  commissionRate         Float        @default(10.0)
+  isFeatured             Boolean      @default(false)
+  isPublished            Boolean      @default(false)
+  avgRating              Float        @default(0)
+  totalReviews           Int          @default(0)
+  amenities              String[]
+  styles                 String[]
+  certifications         String[]
+  yogaCertificateUrl     String?
+  personalIdUrl          String?
   businessRegistrationNo String?
-  applicationNotes    String?
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  applicationNotes       String?
+  suspendedAt            DateTime?
+  suspendedBy            String?
+  rejectedReason         String?
+  approvedAt             DateTime?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
 
-  ownerId        String
-  owner          User     @relation("SchoolOwner", fields: [ownerId], references: [id])
-  courses        Course[]
+  owner    User          @relation("SchoolOwner", fields: [ownerId], references: [id])
+  courses  Course[]
+  reviews  Review[]
+  savedBy  SavedSchool[]
+  inquiries Inquiry[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([isFeatured])
 }
 
 model Teacher {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   courseId       String
   name           String
   bio            String?
   photoUrl       String?
   certifications String[]
   yearsTeaching  Int?
-  
-  course         Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model Course {
-  id              String      @id @default(cuid())
-  schoolId        String
-  name            String
-  slug            String      @unique
-  description     String
-  category        String      // e.g. TTC, Retreat, Drop-in
-  style           String      // e.g. Hatha, Ashtanga
-  level           CourseLevel @default(ALL_LEVELS)
-  durationDays    Int
-  priceINR        Float
-  priceUSD        Float
-  depositPercent  Float       @default(20)
-  includedItems   String[]
-  
-  // New fields for Course Manager
-  isPublished     Boolean     @default(false)
-  roomTypes       Json?       // e.g. [{type: "Private", priceAddon: 150}]
-  highlights      String[]
-  excludes        String[]
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  schoolId       String
+  name           String
+  slug           String      @unique
+  type           CourseType?
+  category       String
+  style          String
+  description    String?
+  level          CourseLevel @default(ALL_LEVELS)
+  durationDays   Int
+  priceUSD       Float
+  priceINR       Float
+  depositPercent Float       @default(30)
+  language       String      @default("English")
+  maxStudents    Int         @default(20)
+  roomTypes      Json        @default("[]")
+  includedItems  String[]
+  highlights     String[]
+  excludes       String[]
+  isPublished    Boolean     @default(false)
+  isFeatured     Boolean     @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  school          School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  courseDates     CourseDate[]
-  teachers        Teacher[]
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  courseDates CourseDate[]
+  teachers    Teacher[]
+  bookings    Booking[]
+  reviews     Review[]
+  inquiries   Inquiry[]
+
+  @@index([schoolId])
+  @@index([slug])
+  @@index([category])
+  @@index([isPublished])
 }
 
 model CourseDate {
-  id           String    @id @default(cuid())
-  courseId     String
-  startDate    DateTime
-  endDate      DateTime
-  capacity     Int
-  priceModifier Float    @default(1.0) // 1.0 is standard, >1 is high season
-  isActive     Boolean   @default(true)
+  id            String   @id @default(cuid())
+  courseId      String
+  startDate     DateTime
+  endDate       DateTime
+  capacity      Int
+  spotsLeft     Int?
+  priceModifier Float    @default(1.0)
+  priceOverride Float?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
 
-  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  bookings     Booking[]
+  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([courseId])
+  @@index([startDate])
 }
 
 model Booking {
-  id            String        @id @default(cuid())
-  userId        String
-  courseDateId  String
-  guests        Int           @default(1)
-  roomType      String        // shared/private/dormitory
-  totalPrice    Float
-  depositAmount Float
-  status        BookingStatus @default(PENDING)
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  userId           String
+  courseId         String?
+  courseDateId     String
+  guests           Int           @default(1)
+  roomType         String        @default("Shared")
+  totalPrice       Float
+  depositAmount    Float
+  balanceDue       Float?
+  currency         String        @default("USD")
+  status           BookingStatus @default(PENDING)
+  notes            String?
+  arrivalConfirmed Boolean       @default(false)
+  confirmedAt      DateTime?
+  cancelledAt      DateTime?
+  cancelReason     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  user          User          @relation(fields: [userId], references: [id])
-  courseDate    CourseDate    @relation(fields: [courseDateId], references: [id])
-  payments      Payment[]
-  review        Review?
+  user       User       @relation(fields: [userId], references: [id])
+  course     Course?    @relation(fields: [courseId], references: [id])
+  courseDate  CourseDate @relation(fields: [courseDateId], references: [id])
+  payments   Payment[]
+  review     Review?
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
 }
 
 model Payment {
-  id               String   @id @default(cuid())
-  bookingId        String
-  amount           Float
-  currency         String   @default("USD")
-  provider         String   // STRIPE, RAZORPAY
-  transactionId    String?  @unique
-  status           String   // SUCCESS, PENDING, FAILED
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String        @id @default(cuid())
+  bookingId         String
+  amount            Float
+  currency          String        @default("USD")
+  provider          String        @default("razorpay")
+  transactionId     String?       @unique
+  providerOrderId   String?
+  providerPaymentId String?
+  providerSignature String?
+  status            PaymentStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }
 
 model Review {
-  id          String   @id @default(cuid())
-  bookingId   String   @unique
-  userId      String
-  rating      Int      // 1-5
-  comment     String?
-  createdAt   DateTime @default(now())
-  
-  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id])
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  userId     String
+  schoolId   String?
+  courseId   String?
+  rating     Int
+  title      String?
+  comment    String?
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+  school  School? @relation(fields: [schoolId], references: [id])
+  course  Course? @relation(fields: [courseId], references: [id])
+
+  @@index([schoolId])
+  @@index([userId])
+}
+
+model BlogPost {
+  id          String       @id @default(cuid())
+  title       String
+  slug        String       @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  category    BlogCategory
+  tags        String[]
+  status      PostStatus   @default(DRAFT)
+  isFeatured  Boolean      @default(false)
+  seoTitle    String?
+  seoDesc     String?
+  authorId    String
+  publishedAt DateTime?
+  views       Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  author User @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([status])
+  @@index([category])
+}
+
+model HomepageContent {
+  id        String   @id @default(cuid())
+  section   String   @unique
+  content   Json
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model SavedSchool {
+  id        String   @id @default(cuid())
+  userId    String
+  schoolId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@unique([userId, schoolId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Inquiry {
+  id            String        @id @default(cuid())
+  schoolId       String
+  courseId       String?
+  userId         String?
+  name           String
+  email          String
+  phone          String?
+  country        String?
+  message        String
+  desiredDate    DateTime?
+  guests         Int           @default(1)
+  status         InquiryStatus @default(NEW)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([schoolId])
+  @@index([courseId])
+  @@index([userId])
+  @@index([status])
 }

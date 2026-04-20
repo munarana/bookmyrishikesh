@@ -212,6 +212,7 @@ export function CourseFormDialog({ isOpen, onClose, onSave, initialData }: Cours
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="TTC_100HR">TTC 100HR</SelectItem>
                     <SelectItem value="TTC_200HR">TTC 200HR</SelectItem>
                     <SelectItem value="TTC_300HR">TTC 300HR</SelectItem>
                     <SelectItem value="TTC_500HR">TTC 500HR</SelectItem>

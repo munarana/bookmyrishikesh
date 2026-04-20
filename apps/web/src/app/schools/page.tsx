@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma, SchoolStatus } from "@repo/database";
-import { MapPin, Star, Users, BookOpen, Search, SlidersHorizontal } from "lucide-react";
+import { MapPin, Star, BookOpen, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -142,7 +142,7 @@ export default async function SchoolsPage({
           {search && (
             <>
               {" "}
-              for <span className="font-bold text-primary">"{search}"</span>
+              for <span className="font-bold text-primary">&quot;{search}&quot;</span>
             </>
           )}
         </p>
